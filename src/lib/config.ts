@@ -44,6 +44,10 @@ let fileConfig: ConfigFileStruct;
 let cachedConfig: AdminConfig;
 
 async function initConfig() {
+  if (cachedConfig) {
+    return;
+  }
+
   if (process.env.DOCKER_ENV === 'true') {
     // 这里用 eval("require") 避开静态分析，防止 Edge Runtime 打包时报 "Can't resolve 'fs'"
     // 在实际 Node.js 运行时才会执行到，因此不会影响 Edge 环境。
@@ -152,7 +156,7 @@ async function initConfig() {
             SiteConfig: {
               SiteName: process.env.SITE_NAME || 'MoonTV',
               Announcement:
-                process.env.NEXT_PUBLIC_ANNOUNCEMENT ||
+                process.env.ANNOUNCEMENT ||
                 '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。',
               SearchDownstreamMaxPage:
                 Number(process.env.NEXT_PUBLIC_SEARCH_MAX_PAGE) || 5,
@@ -192,7 +196,7 @@ async function initConfig() {
       SiteConfig: {
         SiteName: process.env.SITE_NAME || 'MoonTV',
         Announcement:
-          process.env.NEXT_PUBLIC_ANNOUNCEMENT ||
+          process.env.ANNOUNCEMENT ||
           '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。',
         SearchDownstreamMaxPage:
           Number(process.env.NEXT_PUBLIC_SEARCH_MAX_PAGE) || 5,
@@ -216,9 +220,8 @@ async function initConfig() {
   }
 }
 
-initConfig();
-
-export function getConfig(): AdminConfig {
+export async function getConfig(): Promise<AdminConfig> {
+  await initConfig();
   return cachedConfig;
 }
 
@@ -252,7 +255,7 @@ export async function resetConfig() {
     SiteConfig: {
       SiteName: process.env.SITE_NAME || 'MoonTV',
       Announcement:
-        process.env.NEXT_PUBLIC_ANNOUNCEMENT ||
+        process.env.ANNOUNCEMENT ||
         '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。',
       SearchDownstreamMaxPage:
         Number(process.env.NEXT_PUBLIC_SEARCH_MAX_PAGE) || 5,
@@ -283,13 +286,13 @@ export async function resetConfig() {
   cachedConfig.SourceConfig = adminConfig.SourceConfig;
 }
 
-export function getCacheTime(): number {
-  const config = getConfig();
+export async function getCacheTime(): Promise<number> {
+  const config = await getConfig();
   return config.SiteConfig.SiteInterfaceCacheTime || 7200;
 }
 
-export function getAvailableApiSites(): ApiSite[] {
-  const config = getConfig();
+export async function getAvailableApiSites(): Promise<ApiSite[]> {
+  const config = await getConfig();
   return config.SourceConfig.filter((s) => !s.disabled).map((s) => ({
     key: s.key,
     name: s.name,

@@ -7,7 +7,6 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 
 import { getConfig } from '@/lib/config';
 
-import AuthProvider from '../components/AuthProvider';
 import { SiteProvider } from '../components/SiteProvider';
 import { ThemeProvider } from '../components/ThemeProvider';
 
@@ -15,7 +14,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 // 动态生成 metadata，支持配置更新后的标题变化
 export async function generateMetadata(): Promise<Metadata> {
-  const config = getConfig();
+  const config = await getConfig();
 
   return {
     title: config.SiteConfig.SiteName,
@@ -25,19 +24,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: 'cover',
+  themeColor: '#000000',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const config = getConfig();
+  const config = await getConfig();
   const siteName = config.SiteConfig.SiteName;
   const announcement = config.SiteConfig.Announcement;
 
@@ -69,7 +64,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SiteProvider siteName={siteName} announcement={announcement}>
-            <AuthProvider>{children}</AuthProvider>
+            {children}
           </SiteProvider>
         </ThemeProvider>
       </body>
